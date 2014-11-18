@@ -3,14 +3,13 @@ package rest
 import (
 	"log"
 	"net/http"
-	"regexp"
 	"strconv"
-	"strings"
 )
 
 type GoApp struct {
-	env      map[string]interface{}
-	handlers []Handler
+	Mount
+	env map[string]interface{}
+	//handlers []Handler
 }
 
 func (this *GoApp) ServeHTTP(res http.ResponseWriter, req *http.Request) {
@@ -48,15 +47,7 @@ func (this *GoApp) Use(handle func(req Request, res Response, next func(e error)
 }
 
 func (this *GoApp) UsePath(path string, handle func(req Request, res Response, next func(e error))) {
-	var reg *regexp.Regexp
-	var e error
-	if 0 < len(path) {
-		reg, e = regexp.Compile(path)
-		if nil != e {
-			panic(e.Error())
-		}
-	}
-	this.handlers = append(this.handlers, Handler{path: reg, handle: handle})
+	this.MethodNext("", path, handle)
 }
 
 func (this *GoApp) GetEnv(name string) string {
@@ -82,37 +73,42 @@ func (this *GoApp) Get(path string, handle func(req Request, res Response)) {
 		handle(req, res)
 	})
 }
-func (this *GoApp) Post(path string, handle func(req Request, res Response)) {
-	this.Method("POST", path, handle)
-}
-func (this *GoApp) Delete(path string, handle func(req Request, res Response)) {
-	this.Method("DELETE", path, handle)
-}
-func (this *GoApp) Put(path string, handle func(req Request, res Response)) {
-	this.Method("PUT", path, handle)
-}
-func (this *GoApp) Patch(path string, handle func(req Request, res Response)) {
-	this.Method("PATCH", path, handle)
-}
-func (this *GoApp) Method(method string, path string, handle func(req Request, res Response)) {
-}
 
-func (this *GoApp) GetNext(path string, handle func(req Request, res Response, next func(e error))) {
-	this.MethodNext("GET", path, handle)
-}
-func (this *GoApp) PostNext(path string, handle func(req Request, res Response, next func(e error))) {
-	this.MethodNext("POST", path, handle)
-}
-func (this *GoApp) DeleteNext(path string, handle func(req Request, res Response, next func(e error))) {
-	this.MethodNext("DELETE", path, handle)
-}
-func (this *GoApp) PutNext(path string, handle func(req Request, res Response, next func(e error))) {
-	this.MethodNext("PUT", path, handle)
-}
-func (this *GoApp) PatchNext(path string, handle func(req Request, res Response, next func(e error))) {
-	this.MethodNext("PATCH", path, handle)
-}
-func (this *GoApp) MethodNext(method string, path string, handle func(req Request, res Response, next func(e error))) {
-	this.handlers = append(this.handlers, Handler{method: strings.ToUpper(method), path: PathToReg(path), handle: handle})
-	log.Printf("methodNext handles len:%d\n", len(this.handlers))
+//func (this *GoApp) Post(path string, handle func(req Request, res Response)) {
+//	this.Method("POST", path, handle)
+//}
+//func (this *GoApp) Delete(path string, handle func(req Request, res Response)) {
+//	this.Method("DELETE", path, handle)
+//}
+//func (this *GoApp) Put(path string, handle func(req Request, res Response)) {
+//	this.Method("PUT", path, handle)
+//}
+//func (this *GoApp) Patch(path string, handle func(req Request, res Response)) {
+//	this.Method("PATCH", path, handle)
+//}
+//func (this *GoApp) Method(method string, path string, handle func(req Request, res Response)) {
+//}
+
+//func (this *GoApp) GetNext(path string, handle func(req Request, res Response, next func(e error))) {
+//	this.MethodNext("GET", path, handle)
+//}
+//func (this *GoApp) PostNext(path string, handle func(req Request, res Response, next func(e error))) {
+//	this.MethodNext("POST", path, handle)
+//}
+//func (this *GoApp) DeleteNext(path string, handle func(req Request, res Response, next func(e error))) {
+//	this.MethodNext("DELETE", path, handle)
+//}
+//func (this *GoApp) PutNext(path string, handle func(req Request, res Response, next func(e error))) {
+//	this.MethodNext("PUT", path, handle)
+//}
+//func (this *GoApp) PatchNext(path string, handle func(req Request, res Response, next func(e error))) {
+//	this.MethodNext("PATCH", path, handle)
+//}
+//func (this *GoApp) MethodNext(method string, path string, handle func(req Request, res Response, next func(e error))) {
+//	this.handlers = append(this.handlers, Handler{method: strings.ToUpper(method), path: PathToReg(path), handle: handle})
+//	log.Printf("methodNext handles len:%d\n", len(this.handlers))
+//}
+
+func (this *GoApp) Attach(base string, mount *Mount) {
+	this.Append(base, mount)
 }
