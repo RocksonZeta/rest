@@ -7,7 +7,7 @@ import (
 )
 
 type GoApp struct {
-	Mount
+	Route
 	env map[string]interface{}
 	//handlers []Handler
 }
@@ -109,6 +109,6 @@ func (this *GoApp) Get(path string, handle func(req Request, res Response)) {
 //	log.Printf("methodNext handles len:%d\n", len(this.handlers))
 //}
 
-func (this *GoApp) Attach(base string, mount *Mount) {
-	this.Append(base, mount)
-}
+//func (this *GoApp) Append(base string, mount *Route) {
+//	this.Mount(base, mount)
+//}

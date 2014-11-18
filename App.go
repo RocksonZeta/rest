@@ -22,7 +22,7 @@ type App interface {
 	PutNext(path string, handle func(req Request, res Response, next func(e error)))
 	PatchNext(path string, handle func(req Request, res Response, next func(e error)))
 	MethodNext(method string, path string, handle func(req Request, res Response, next func(e error)))
-	Attach(base string, mount *Mount)
+	//Append(base string, route *Route)
 
 	Listen(port int)
 }
