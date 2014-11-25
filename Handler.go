@@ -10,7 +10,7 @@ type Handler struct {
 	path    string
 	pathReg *regexp.Regexp
 	method  string
-	handle  func(req Request, res Response, next func(e error))
+	handle  func(req *Request, res *Response, next func(e error))
 }
 
 func (this *Handler) Matches(method, path string) bool {
