@@ -6,27 +6,49 @@ import (
 )
 
 type Request struct {
+	*http.Request
 	app     *App
-	req     *http.Request
-	method  string
+	Path    string
 	params  map[string]string
 	queries map[string][]string
 	fields  map[string][]string
-	files   map[string][]FormFile
+	files   map[string][]*FormFile
 }
+
+func (this *Request) Init() {
+	this.path = this.URL.Path
+	var querySTring = this.URL.RawQuery
+}
+func parse
+
 
 func (this *Request) Param(name string) string {
-	return ""
+	if 0 >= len(this.params) {
+		return ""
+	} else {
+		return this.params[name][0]
+	}
 }
 func (this *Request) Query(name string) string {
-	return ""
-
+	if 0 >= len(this.queries) {
+		return ""
+	} else {
+		return this.queries[name][0]
+	}
 }
 func (this *Request) Field(name string) string {
-	return this.req.PostFormValue(name)
+	if 0 >= len(this.fields) {
+		return ""
+	} else {
+		return this.fields[name][0]
+	}
 }
 func (this *Request) File(name string) *FormFile {
-	return nil
+	if 0 >= len(this.files) {
+		return ""
+	} else {
+		return this.files[name][0]
+	}
 }
 func (this *Request) GetParam(name string) string {
 	return ""
@@ -53,18 +75,15 @@ func (this *Request) AllFiles() []*FormFile {
 }
 
 //headers
-func (this *Request) Get(name string) string {
-	return ""
-}
-func (this *Request) Cookie(name string) string {
-	return ""
-}
-func (this *Request) GetCookie(name string) *Cookie {
-	return nil
-}
-func (this *Request) Cookies() []*Cookie {
-	return nil
-}
+//func (this *Request) Cookie(name string) string {
+//	return ""
+//}
+//func (this *Request) GetCookie(name string) *Cookie {
+//	return nil
+//}
+//func (this *Request) Cookies() []*Cookie {
+//	return nil
+//}
 func (this *Request) Host() string {
 	return ""
 }
@@ -77,9 +96,7 @@ func (this *Request) Ips() string {
 func (this *Request) xhr() string {
 	return ""
 }
-func (this *Request) Path() string {
-	return this.req.URL.Path
-}
+
 func (this *Request) OriginUrl() string {
 	return ""
 }
@@ -91,8 +108,4 @@ func (this *Request) Protocol() string {
 }
 func (this *Request) IsSecure() string {
 	return ""
-}
-
-func (this *Request) Method() string {
-	return this.method
 }

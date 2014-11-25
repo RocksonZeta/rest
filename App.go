@@ -38,7 +38,6 @@ func (this *App) exec(request *Request, response *Response, i int) {
 
 func (this *App) Listen(port int) {
 	log.Printf("server listen at:%d\n", port)
-
 	http.ListenAndServe(":"+strconv.Itoa(port), this)
 }
 
@@ -50,23 +49,23 @@ func (this *App) UsePath(path string, handle func(req *Request, res *Response, n
 	this.MethodNext("", path, handle)
 }
 
-func (this *App) GetEnv(name string) string {
-	return ""
+func (this *App) GetEnv(name string) interface{} {
+	return this.env[name]
 }
 func (this *App) SetEnv(name string, value interface{}) {
-
+	this.env[name] = value
 }
 func (this *App) Enable(name string) {
-
+	this.env[name] = true
 }
 func (this *App) Enabled(name string) bool {
-	return false
+	return bool(this.env[name])
 }
 func (this *App) Disable(name string) {
-
+	this.env[name] = false
 }
 func (this *App) Disabled(name string) bool {
-	return false
+	return bool(this.env[name])
 }
 func (this *App) Get(path string, handle func(req *Request, res *Response)) {
 	this.MethodNext("GET", path, func(req *Request, res *Response, next func(e error)) {
