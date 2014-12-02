@@ -6,12 +6,12 @@ import (
 )
 
 type Response struct {
-	app *App
-	res http.ResponseWriter
+	Resp *http.ResponseWriter
+	App  *App
 }
 
 func (this *Response) Send(body string) {
-	io.WriteString(this.res, body)
+	io.WriteString(*this.Resp, body)
 }
 func (this *Response) SendFile(file string) {
 

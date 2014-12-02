@@ -7,14 +7,14 @@ import (
 )
 
 type App struct {
-	Route
-	env map[string]interface{}
+	Router
+	Env map[string]interface{}
 	//handlers []Handler
 }
 
 func (this *App) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	request := &Request{app: this, req: req, method: req.Method}
-	response := &Response{app: this, res: res}
+	request := &Request{Req: req, App: this}
+	response := &Response{Resp: &res, App: this}
 	this.exec(request, response, 0)
 }
 
@@ -23,7 +23,7 @@ func (this *App) exec(request *Request, response *Response, i int) {
 		return
 	}
 	handler := this.handlers[i]
-	if handler.Matches(request.Method(), request.Path()) {
+	if handler.Matches(request.Method, request.Path) {
 		handler.handle(request, response, func(e error) {
 			if nil != e {
 				panic(e.Error())
@@ -46,29 +46,37 @@ func (this *App) Use(handle func(req *Request, res *Response, next func(e error)
 }
 
 func (this *App) UsePath(path string, handle func(req *Request, res *Response, next func(e error))) {
-	this.MethodNext("", path, handle)
+	this.RouteNext("", path, handle)
 }
 
 func (this *App) GetEnv(name string) interface{} {
-	return this.env[name]
+	return this.Env[name]
 }
 func (this *App) SetEnv(name string, value interface{}) {
-	this.env[name] = value
+	this.Env[name] = value
 }
 func (this *App) Enable(name string) {
-	this.env[name] = true
+	this.Env[name] = true
 }
 func (this *App) Enabled(name string) bool {
-	return bool(this.env[name])
+	if r, ok := this.Env[name].(bool); ok {
+		return r
+	} else {
+		return false
+	}
 }
 func (this *App) Disable(name string) {
-	this.env[name] = false
+	this.Env[name] = false
 }
 func (this *App) Disabled(name string) bool {
-	return bool(this.env[name])
+	if r, ok := this.Env[name].(bool); ok {
+		return r
+	} else {
+		return true
+	}
 }
 func (this *App) Get(path string, handle func(req *Request, res *Response)) {
-	this.MethodNext("GET", path, func(req *Request, res *Response, next func(e error)) {
+	this.RouteNext("GET", path, func(req *Request, res *Response, next func(e error)) {
 		handle(req, res)
 	})
 }
