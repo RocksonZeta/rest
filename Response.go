@@ -12,8 +12,11 @@ type Response struct {
 	App  *App
 }
 
-func (this *Response) Send(body string) {
-	io.WriteString(this.Resp, body)
+func (this *Response) Send(body string) (int, error) {
+	return io.WriteString(this.Resp, body)
+}
+func (this *Response) Write(body []byte) (int, error) {
+	return this.Resp.Write(body)
 }
 func (this *Response) SendFile(file string) {
 
@@ -24,7 +27,7 @@ func (this *Response) Download(path string) {
 func (this *Response) Json(obj interface{}) {
 	r, e := json.Marshal(obj)
 	if nil != e {
-		log.Panic(e)
+		panic(e)
 	} else {
 		_, e := this.Resp.Write(r)
 		if nil != e {
