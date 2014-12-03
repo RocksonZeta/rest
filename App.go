@@ -14,16 +14,20 @@ type App struct {
 
 func (this *App) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	request := &Request{Req: req, App: this}
-	response := &Response{Resp: &res, App: this}
+	request.Init()
+	response := &Response{Resp: res, App: this}
 	this.exec(request, response, 0)
 }
 
 func (this *App) exec(request *Request, response *Response, i int) {
+	log.Printf("App#exec method:%s,path:%s", request.Method, request.Path)
 	if len(this.handlers) <= i {
 		return
 	}
 	handler := this.handlers[i]
-	if handler.Matches(request.Method, request.Path) {
+	if params, ok := handler.Matches(request.Method, request.Path); ok {
+		log.Printf("match ok , %s", request.Path)
+		request.Params = params
 		handler.handle(request, response, func(e error) {
 			if nil != e {
 				panic(e.Error())
@@ -75,11 +79,12 @@ func (this *App) Disabled(name string) bool {
 		return true
 	}
 }
-func (this *App) Get(path string, handle func(req *Request, res *Response)) {
-	this.RouteNext("GET", path, func(req *Request, res *Response, next func(e error)) {
-		handle(req, res)
-	})
-}
+
+//func (this *App) Get(path string, handle func(req *Request, res *Response)) {
+//	this.RouteNext("GET", path, func(req *Request, res *Response, next func(e error)) {
+//		handle(req, res)
+//	})
+//}
 
 //func (this *App) Post(path string, handle func(req Request, res Response)) {
 //	this.Method("POST", path, handle)

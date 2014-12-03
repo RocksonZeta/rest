@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	"rest/utils"
@@ -20,17 +21,23 @@ type Request struct {
 	Host    string
 	Method  string
 	Path    string
-	Params  map[string]string
-	Queries map[string][]string
-	Fields  map[string][]string
-	Files   map[string][]*FormFile
+	Params  map[string]string      //params in url path
+	Queries map[string][]string    //the query params
+	Fields  map[string][]string    //form field or upload fields
+	Files   map[string][]*FormFile //upload files
 }
 
 func (this *Request) Init() {
 	this.Path = this.Req.URL.Path
+	this.Method = this.Req.Method
+	this.Host = this.Req.Host
 	this.Queries = utils.ParseQueryString(this.Req.URL.RawQuery)
-	this.Fields = utils.ParseQueryString(this.Req.PostForm.Encode())
-	if(this.ContentType())
+	if strings.Contains(this.ContentType(), "application/x-www-form-urlencoded") {
+		this.Fields = utils.ParseQueryString(this.Req.PostForm.Encode())
+	}
+	if strings.Contains(this.ContentType(), "multipart/form-data") {
+		this.parseMultiparts()
+	}
 }
 
 func (this *Request) parseMultiparts() {
@@ -61,7 +68,7 @@ func (this *Request) parseMultipartFile(fileHeaders []*multipart.FileHeader) []*
 			panic(e.Error())
 		}
 		formFile.Path = path
-		formFile.Size = writeLen
+		formFile.Size = int(writeLen)
 		result[i] = formFile
 	}
 	return result
@@ -150,6 +157,5 @@ func (this *Request) IsSecure() string {
 	return ""
 }
 func (this *Request) ContentType() string {
-	return this.Req.Header.Get("Content-type");
+	return this.Req.Header.Get("Content-type")
 }
-

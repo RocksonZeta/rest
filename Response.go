@@ -1,17 +1,19 @@
 package rest
 
 import (
+	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 )
 
 type Response struct {
-	Resp *http.ResponseWriter
+	Resp http.ResponseWriter
 	App  *App
 }
 
 func (this *Response) Send(body string) {
-	io.WriteString(*this.Resp, body)
+	io.WriteString(this.Resp, body)
 }
 func (this *Response) SendFile(file string) {
 
@@ -19,7 +21,17 @@ func (this *Response) SendFile(file string) {
 func (this *Response) Download(path string) {
 
 }
-func (this *Response) Json(obj interface{})                           {}
+func (this *Response) Json(obj interface{}) {
+	r, e := json.Marshal(obj)
+	if nil != e {
+		log.Panic(e)
+	} else {
+		_, e := this.Resp.Write(r)
+		if nil != e {
+			log.Panic(e)
+		}
+	}
+}
 func (this *Response) Jsonp(obj interface{})                          {}
 func (this *Response) Render(tpl string, data map[string]interface{}) {}
 func (this *Response) Redirect(url string)                            {}

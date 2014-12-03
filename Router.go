@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"log"
 	pathUtils "path"
 	"strings"
 )
@@ -56,5 +57,6 @@ func (this *Router) PatchNext(path string, handle func(req *Request, res *Respon
 	this.RouteNext("PATCH", path, handle)
 }
 func (this *Router) RouteNext(method string, path string, handle func(req *Request, res *Response, next func(e error))) {
+	log.Printf("method:%s,path:%s\n", method, path)
 	this.handlers = append(this.handlers, Handler{method: strings.ToUpper(method), path: path, handle: handle})
 }
