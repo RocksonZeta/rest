@@ -25,6 +25,7 @@ type Request struct {
 	Queries map[string][]string    //the query params
 	Fields  map[string][]string    //form field or upload fields
 	Files   map[string][]*FormFile //upload files
+	Session ISession
 }
 
 func (this *Request) Init() {
