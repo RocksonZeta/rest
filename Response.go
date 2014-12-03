@@ -10,7 +10,7 @@ import (
 type Response struct {
 	Resp       http.ResponseWriter
 	App        *App
-	SetCookies []Cookie
+	SetCookies map[string]Cookie
 }
 
 func (this *Response) Send(body string) (int, error) {
@@ -42,9 +42,33 @@ func (this *Response) Redirect(url string)                            {}
 func (this *Response) Status(status int)                              {}
 func (this *Response) Location(location string)                       {}
 func (this *Response) SetCookie(cookie Cookie) {
-	this.SetCookies = 
+	if nil == this.SetCookies {
+		this.SetCookies = map[string]Cookie{cookie.Name: cookie}
+	} else {
+		this.SetCookies[cookie.Name] = cookie
+	}
+	s := ""
+	for _, item := range this.SetCookies {
+		s += item.Encode() + "; "
+	}
+	if 0 < len(s) {
+		s = s[0 : len(s)-2]
+		this.Resp.Header().Set("Set-Cookie", s)
+	} else {
+		this.Resp.Header().Del("Set-Cookie")
+	}
 }
-func (this *Response) ClearCookie(name string)        {}
+func (this *Response) Cookie(name, value string) {
+	this.SetCookie(Cookie{Name: name, Value: value})
+}
+func (this *Response) CookieMaxAge(name, value string, maxAge int) {
+	cookie := Cookie{Name: name, Value: value}
+	cookie.SetMaxAge(maxAge)
+	this.SetCookie(cookie)
+}
+func (this *Response) ClearCookie(name string) {
+	this.CookieMaxAge(name, "", -100000)
+}
 func (this *Response) ContentType(contentType string) {}
 func (this *Response) Set(name string, value string) {
 	this.Resp.Header().Set(name, value)
