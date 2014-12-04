@@ -31,22 +31,30 @@ type PathTreeNode struct {
 	Handlers []*OrderHandler
 }
 
-func ParsePathNode(raw string) PathTreeNode {
-	if strings.HasPrefix(raw, PathTreeNodeGreedyPrefix) {
-		return &PathTreeNode{Name: strings.TrimPrefix(raw, PathTreeNodeGreedyPrefix), Type: PathTreeNodeGreedy}
-	}
+func ParsePathNode(raw string) *PathTreeNode {
+	//if strings.HasPrefix(raw, PathTreeNodeGreedyPrefix) {
+	//	return &PathTreeNode{Name: strings.TrimPrefix(raw, PathTreeNodeGreedyPrefix), Type: PathTreeNodeGreedy}
+	//}
 	if strings.HasPrefix(raw, PathTreeNodeNonGreedyPrefix) {
 		return &PathTreeNode{Name: strings.TrimPrefix(raw, PathTreeNodeNonGreedyPrefix), Type: PathTreeNodeNonGreedy}
 	}
 	return &PathTreeNode{Name: raw, Type: PathTreeNodeNorm}
 }
 
-func ParsePath(path string) *PathTreeNode {
+func ParsePath(path string) (*PathTreeNode, *PathTreeNode) {
 	ps := strings.Split(path, "/")
-	var root = &PathTreeNode(Name)
-	var node *PathTreeNode
-
+	nodes := make([]*PathTreeNode, len(ps))
+	for i, p := range ps {
+		nodes[i] = ParsePathNode(p)
+	}
+	for i, n := range nodes {
+		if i > 0 {
+			nodes[i].Append(nodes[i-1])
+		}
+	}
+	return nodes[0], nodes[len(nodes)-1]
 }
+
 func (this *PathTreeNode) Match(path string) string {
 
 }
@@ -63,7 +71,7 @@ func (this *PathTreeNode) FindHandlers() []OrderHandler {
 func (this *PathTreeNode) Append(node *PathTreeNode) {
 	this.Children = append(this.Children, node)
 }
-func (this *PathTreeNode) Mount(path string, method string, Handle func(req *Request, res *Response, next func(e error))) {
+func (this *PathTreeNode) Mount(path string, handler *OrderHandler) {
 
 }
 func (this *PathTreeNode) Root() PathTreeNode {
