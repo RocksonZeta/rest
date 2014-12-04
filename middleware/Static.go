@@ -2,13 +2,18 @@ package middleware
 
 import (
 	"io"
-	"log"
 	"os"
 	"path"
 	"rest"
+	"time"
 )
 
-func Static(dir string, conf map[string]interface{}) func(request *rest.Request, response *rest.Response, next func(e error)) {
+type StaticConf struct {
+	autoIndex    bool
+	cacheControl string
+}
+
+func Static(dir string, conf ...StaticConf) func(request *rest.Request, response *rest.Response, next func(e error)) {
 	stat, e := os.Stat(dir)
 	if nil != e {
 		panic(e)
@@ -18,13 +23,22 @@ func Static(dir string, conf map[string]interface{}) func(request *rest.Request,
 	}
 	return func(request *rest.Request, response *rest.Response, next func(e error)) {
 		file := path.Join(dir, request.Path)
-		log.Printf("static file:%s\n", file)
 		fileInfo, e := os.Stat(file)
 		if nil != e || fileInfo.IsDir() {
 			next(nil)
 			return
 		}
-		openedFile, e := os.OpenFile(file, os.O_RDONLY, 0666)
+		since := request.Get("If-Modified-Since")
+		if 0 == len(since) {
+			response.Set("Last-Modified", fileInfo.ModTime().UTC().Format(rest.GMT_FORMAT))
+		} else {
+			sinceTime, e := time.Parse(rest.GMT_FORMAT, since)
+			if nil == e && (sinceTime.Equal(fileInfo.ModTime()) || sinceTime.Before(fileInfo.ModTime())) {
+				response.Status(304)
+				return
+			}
+		}
+		openedFile, e := os.Open(file)
 		io.Copy(response, openedFile)
 	}
 }

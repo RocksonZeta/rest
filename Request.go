@@ -118,15 +118,25 @@ func (this *Request) GetParams(name string) string {
 	return ""
 }
 
+func (this *Request) GetCookie(name string) *http.Cookie {
+	cookie, e := this.Req.Cookie(name)
+
+	if nil != e {
+		return nil
+	} else {
+		return cookie
+	}
+
+}
+
 //headers
 func (this *Request) Cookie(name string) string {
-	return ""
-}
-func (this *Request) GetCookie(name string) *Cookie {
-	return nil
-}
-func (this *Request) Cookies() []*Cookie {
-	return nil
+	cookie, e := this.Req.Cookie(name)
+	if nil != e {
+		return ""
+	} else {
+		return cookie.Value
+	}
 }
 
 func (this *Request) Ip() string {
@@ -159,4 +169,7 @@ func (this *Request) IsSecure() string {
 }
 func (this *Request) ContentType() string {
 	return this.Req.Header.Get("Content-type")
+}
+func (this *Request) Get(head string) string {
+	return this.Req.Header.Get(head)
 }

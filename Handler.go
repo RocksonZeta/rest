@@ -1,33 +1,31 @@
 package rest
 
 import (
-	"log"
 	"regexp"
 	"strings"
 )
 
 type Handler struct {
-	path    string
-	pathReg *regexp.Regexp
-	method  string
-	handle  func(req *Request, res *Response, next func(e error))
+	Path    string
+	PathReg *regexp.Regexp
+	Method  string
+	Handle  func(req *Request, res *Response, next func(e error))
 }
 
 func (this *Handler) Matches(method, path string) (params map[string]string, ok bool) {
-	log.Printf("Handle#Matches - this.method:%s,this.path:%s to match %s %s \n", this.method, this.path, method, path)
-	if nil == this.pathReg {
-		this.pathReg = PathToReg(this.path)
+	if nil == this.PathReg {
+		this.PathReg = PathToReg(this.Path)
 	}
-	if 0 == len(this.method) && nil == this.pathReg {
+	if 0 == len(this.Method) && nil == this.PathReg {
 		ok = true
 		return
 	}
-	if 0 != len(this.method) && nil == this.pathReg {
-		ok = (this.method == strings.ToUpper(method))
+	if 0 != len(this.Method) && nil == this.PathReg {
+		ok = (this.Method == strings.ToUpper(method))
 		return
 	}
-	if nil != this.pathReg {
-		params = Matches(this.pathReg, path)
+	if nil != this.PathReg {
+		params = Matches(this.PathReg, path)
 		if nil != params {
 			ok = true
 		}

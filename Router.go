@@ -7,16 +7,16 @@ import (
 )
 
 type Router struct {
-	handlers []Handler
+	Handlers []Handler
 }
 
 func (this *Router) Mount(base string, mount *Router) {
 	if nil == mount {
 		return
 	}
-	for _, handler := range mount.handlers {
-		handler.path = pathUtils.Join(base, handler.path)
-		this.handlers = append(this.handlers, handler)
+	for _, handler := range mount.Handlers {
+		handler.Path = pathUtils.Join(base, handler.Path)
+		this.Handlers = append(this.Handlers, handler)
 	}
 }
 
@@ -58,5 +58,5 @@ func (this *Router) PatchNext(path string, handle func(req *Request, res *Respon
 }
 func (this *Router) RouteNext(method string, path string, handle func(req *Request, res *Response, next func(e error))) {
 	log.Printf("method:%s,path:%s\n", method, path)
-	this.handlers = append(this.handlers, Handler{method: strings.ToUpper(method), path: path, handle: handle})
+	this.Handlers = append(this.Handlers, Handler{Method: strings.ToUpper(method), Path: path, Handle: handle})
 }

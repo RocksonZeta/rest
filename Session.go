@@ -9,4 +9,7 @@ type ISession interface {
 	Save()
 	Reload()
 	Regenerate()
+	Has(key string) bool
+	GetInt(key string) int
+	GetString(key string) string
 }

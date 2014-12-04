@@ -21,14 +21,14 @@ func (this *App) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 func (this *App) exec(request *Request, response *Response, i int) {
 	log.Printf("App#exec method:%s,path:%s", request.Method, request.Path)
-	if len(this.handlers) <= i {
+	if len(this.Handlers) <= i {
 		return
 	}
-	handler := this.handlers[i]
+	handler := this.Handlers[i]
 	if params, ok := handler.Matches(request.Method, request.Path); ok {
 		log.Printf("match ok , %s", request.Path)
 		request.Params = params
-		handler.handle(request, response, func(e error) {
+		handler.Handle(request, response, func(e error) {
 			if nil != e {
 				panic(e.Error())
 				return

@@ -8,9 +8,8 @@ import (
 )
 
 type Response struct {
-	Resp       http.ResponseWriter
-	App        *App
-	SetCookies map[string]Cookie
+	Resp http.ResponseWriter
+	App  *App
 }
 
 func (this *Response) Send(body string) (int, error) {
@@ -26,6 +25,7 @@ func (this *Response) Download(path string) {
 
 }
 func (this *Response) Json(obj interface{}) {
+	this.ContentType("application/json")
 	r, e := json.Marshal(obj)
 	if nil != e {
 		panic(e)
@@ -39,37 +39,26 @@ func (this *Response) Json(obj interface{}) {
 func (this *Response) Jsonp(obj interface{})                          {}
 func (this *Response) Render(tpl string, data map[string]interface{}) {}
 func (this *Response) Redirect(url string)                            {}
-func (this *Response) Status(status int)                              {}
-func (this *Response) Location(location string)                       {}
-func (this *Response) SetCookie(cookie Cookie) {
-	if nil == this.SetCookies {
-		this.SetCookies = map[string]Cookie{cookie.Name: cookie}
-	} else {
-		this.SetCookies[cookie.Name] = cookie
-	}
-	s := ""
-	for _, item := range this.SetCookies {
-		s += item.Encode() + "; "
-	}
-	if 0 < len(s) {
-		s = s[0 : len(s)-2]
-		this.Resp.Header().Set("Set-Cookie", s)
-	} else {
-		this.Resp.Header().Del("Set-Cookie")
-	}
+func (this *Response) Status(status int) {
+	this.Resp.WriteHeader(status)
+}
+func (this *Response) Location(location string) {}
+func (this *Response) SetCookie(cookie *http.Cookie) {
+	http.SetCookie(this.Resp, cookie)
 }
 func (this *Response) Cookie(name, value string) {
-	this.SetCookie(Cookie{Name: name, Value: value})
+	this.SetCookie(&http.Cookie{Name: name, Value: value})
 }
 func (this *Response) CookieMaxAge(name, value string, maxAge int) {
-	cookie := Cookie{Name: name, Value: value}
-	cookie.SetMaxAge(maxAge)
+	cookie := &http.Cookie{Name: name, Value: value, MaxAge: maxAge}
 	this.SetCookie(cookie)
 }
 func (this *Response) ClearCookie(name string) {
-	this.CookieMaxAge(name, "", -100000)
+	this.CookieMaxAge(name, "", -1)
 }
-func (this *Response) ContentType(contentType string) {}
+func (this *Response) ContentType(contentType string) {
+	this.Set("Content-Type", contentType)
+}
 func (this *Response) Set(name string, value string) {
 	this.Resp.Header().Set(name, value)
 }
