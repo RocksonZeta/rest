@@ -15,11 +15,12 @@ const (
 )
 
 type OrderHandler struct {
-	Method string
-	Base   string //eg. /user
-	Path   string //eg. /id
-	Handle func(req *Request, res *Response, next func(e error))
-	Order  int
+	Method   string
+	Base     string //eg. /user
+	Path     string //eg. /id
+	IsFilter bool
+	Handle   func(req *Request, res *Response, next func(e error))
+	Order    int
 }
 
 type PathTreeNode struct {
