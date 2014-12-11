@@ -21,6 +21,7 @@ type Request struct {
 	Host    string
 	Method  string
 	Path    string
+	Base    string
 	Params  map[string]string      //params in url path
 	Queries map[string][]string    //the query params
 	Fields  map[string][]string    //form field or upload fields
@@ -30,6 +31,7 @@ type Request struct {
 
 func (this *Request) Init() {
 	this.Path = this.Req.URL.Path
+	this.Base = "/"
 	this.Method = this.Req.Method
 	this.Host = this.Req.Host
 	this.Queries = utils.ParseQueryString(this.Req.URL.RawQuery)

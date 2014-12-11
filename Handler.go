@@ -5,32 +5,27 @@ import (
 	"strings"
 )
 
+type HandleFn func(req *Request, res *Response, next func(e error))
+type DoneFn func(req *Request, res *Response)
+
 type Handler struct {
-	Path    string
 	PathReg *regexp.Regexp
 	Method  string
-	Handle  func(req *Request, res *Response, next func(e error))
+	Handle  HandleFn
 }
 
-func (this *Handler) Matches(method, path string) (params map[string]string, ok bool) {
-	if nil == this.PathReg {
-		this.PathReg = PathToReg(this.Path)
-	}
+func (this *Handler) Matches(method, path string) (base string, params map[string]string) {
 	if 0 == len(this.Method) && nil == this.PathReg {
-		ok = true
+		base = "/"
 		return
 	}
-	if 0 != len(this.Method) && nil == this.PathReg {
-		ok = (this.Method == strings.ToUpper(method))
-		return
+	if 0 != len(this.Method) {
+		if this.Method == strings.ToUpper(method) {
+			base = "/"
+		}
 	}
 	if nil != this.PathReg {
-		params = Matches(this.PathReg, path)
-		if nil != params {
-			ok = true
-		}
-		return
+		base, params = NamedMatches(this.PathReg, path)
 	}
-	ok = true
 	return
 }

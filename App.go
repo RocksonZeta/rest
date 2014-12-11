@@ -3,7 +3,9 @@ package rest
 import (
 	"log"
 	"net/http"
+	"path"
 	"strconv"
+	"strings"
 )
 
 type App struct {
@@ -12,45 +14,53 @@ type App struct {
 	//handlers []Handler
 }
 
+func (this *App) Mount(base string, app *App) {
+
+	this.UsePath(base, func(req *Request, res *Response, next func(e error)) {
+		app.Exec(req, res, 0)
+		next(nil)
+	})
+
+}
+
 func (this *App) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	request := &Request{Req: req, App: this}
 	request.Init()
 	response := &Response{Resp: res, App: this}
-	this.exec(request, response, 0)
+	this.Exec(request, response, 0)
 }
 
-func (this *App) exec(request *Request, response *Response, i int) {
+func (this *App) Exec(request *Request, response *Response, i int) {
 	log.Printf("App#exec method:%s,path:%s", request.Method, request.Path)
 	if len(this.Handlers) <= i {
 		return
 	}
 	handler := this.Handlers[i]
-	if params, ok := handler.Matches(request.Method, request.Path); ok {
-		log.Printf("match ok , %s", request.Path)
+	base, params := handler.Matches(request.Method, request.Path)
+	log.Printf("base:%s\n", base)
+	if 0 < len(base) {
+		log.Printf("match ok ,base:%s,path:%s\n", request.Base, request.Path)
 		request.Params = params
+		if 1 < len(base) {
+			request.Base = base
+			request.Path = path.Clean(strings.TrimPrefix(request.Path, path.Clean(base)))
+		}
+		log.Printf("matched ok ,base:%s,path:%s\n", request.Base, request.Path)
 		handler.Handle(request, response, func(e error) {
 			if nil != e {
-				panic(e.Error())
-				return
+				panic(e)
 			}
-			this.exec(request, response, i+1)
+			this.Exec(request, response, i+1)
+
 		})
 	} else {
-		this.exec(request, response, i+1)
+		this.Exec(request, response, i+1)
 	}
 }
 
 func (this *App) Listen(port int) {
 	log.Printf("server listen at:%d\n", port)
 	http.ListenAndServe(":"+strconv.Itoa(port), this)
-}
-
-func (this *App) Use(handle func(req *Request, res *Response, next func(e error))) {
-	this.UsePath("", handle)
-}
-
-func (this *App) UsePath(path string, handle func(req *Request, res *Response, next func(e error))) {
-	this.RouteNext("", path, handle)
 }
 
 func (this *App) GetEnv(name string) interface{} {

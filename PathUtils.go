@@ -3,28 +3,39 @@ package rest
 import (
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 var PATH_REG *regexp.Regexp = regexp.MustCompile(":([^/]+)")
+
+func NamedPath(path string) string {
+	return PATH_REG.ReplaceAllString(path, "(?P<$1>[^/]+)")
+}
 
 func PathToRegString(path string) string {
 	if 0 == len(path) {
 		return path
 	}
-	var reg = PATH_REG.ReplaceAllString(path, "(?P<$1>[^/]+)")
-	return "^" + reg + "$"
+	if strings.HasPrefix(path, "^") {
+		return NamedPath(path)
+	}
+	return "^" + NamedPath(path) + "$"
 }
 func PathToReg(path string) *regexp.Regexp {
+	if 0 == len(path) {
+		return nil
+	}
 	return regexp.MustCompile(PathToRegString(path))
 }
 
-func Matches(reg *regexp.Regexp, path string) map[string]string {
-	if !reg.MatchString(path) {
-		return nil
+func NamedMatches(reg *regexp.Regexp, path string) (base string, result map[string]string) {
+	values := reg.FindStringSubmatch(path)
+	if 0 == len(values) {
+		return
 	}
-	var keys = reg.SubexpNames()
-	var values = reg.FindStringSubmatch(path)
-	result := make(map[string]string, len(keys)-1)
+	base = values[0]
+	keys := reg.SubexpNames()
+	result = make(map[string]string, len(keys)-1)
 	for i := 1; i < len(keys); i++ {
 		if "" == keys[i] {
 			result[strconv.Itoa(i)] = values[i]
@@ -33,5 +44,5 @@ func Matches(reg *regexp.Regexp, path string) map[string]string {
 		}
 
 	}
-	return result
+	return
 }
