@@ -15,12 +15,11 @@ type App struct {
 }
 
 func (this *App) Mount(base string, app *App) {
-
 	this.UsePath(base, func(req *Request, res *Response, next func(e error)) {
-		app.Exec(req, res, 0)
-		next(nil)
+		if !app.Exec(req, res, 0) {
+			next(nil)
+		}
 	})
-
 }
 
 func (this *App) ServeHTTP(res http.ResponseWriter, req *http.Request) {
@@ -30,14 +29,13 @@ func (this *App) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	this.Exec(request, response, 0)
 }
 
-func (this *App) Exec(request *Request, response *Response, i int) {
-	log.Printf("App#exec method:%s,path:%s", request.Method, request.Path)
+func (this *App) Exec(request *Request, response *Response, i int) bool {
+	log.Printf("Exec method:%s,path:%s,OriginPath:%s", request.Method, request.Path, request.OriginUrl())
 	if len(this.Handlers) <= i {
-		return
+		return false //no completed
 	}
 	handler := this.Handlers[i]
 	base, params := handler.Matches(request.Method, request.Path)
-	log.Printf("base:%s\n", base)
 	if 0 < len(base) {
 		log.Printf("match ok ,base:%s,path:%s\n", request.Base, request.Path)
 		request.Params = params
@@ -53,8 +51,9 @@ func (this *App) Exec(request *Request, response *Response, i int) {
 			this.Exec(request, response, i+1)
 
 		})
+		return true
 	} else {
-		this.Exec(request, response, i+1)
+		return this.Exec(request, response, i+1)
 	}
 }
 

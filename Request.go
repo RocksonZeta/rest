@@ -158,7 +158,7 @@ func (this *Request) Xhr() string {
 }
 
 func (this *Request) OriginUrl() string {
-	return ""
+	return this.Req.URL.String()
 }
 func (this *Request) Url() *url.URL {
 	return this.Req.URL

@@ -15,17 +15,22 @@ type Handler struct {
 }
 
 func (this *Handler) Matches(method, path string) (base string, params map[string]string) {
-	if 0 == len(this.Method) && nil == this.PathReg {
-		base = "/"
-		return
-	}
 	if 0 != len(this.Method) {
-		if this.Method == strings.ToUpper(method) {
+		if this.Method != strings.ToUpper(method) {
+			return
+		}
+		if nil != this.PathReg {
+			base, params = NamedMatches(this.PathReg, path)
+		} else {
 			base = "/"
 		}
-	}
-	if nil != this.PathReg {
+	} else {
+		if nil == this.PathReg {
+			base = "/"
+			return
+		}
 		base, params = NamedMatches(this.PathReg, path)
 	}
 	return
+
 }
