@@ -9,9 +9,8 @@ import (
 )
 
 type App struct {
-	Router
-	Env map[string]interface{}
-	//handlers []Handler
+	Env      map[string]interface{}
+	Handlers []*Handler
 }
 
 func (this *App) Mount(base string, app *App) {
@@ -89,47 +88,54 @@ func (this *App) Disabled(name string) bool {
 	}
 }
 
-//func (this *App) Get(path string, handle func(req *Request, res *Response)) {
-//	this.RouteNext("GET", path, func(req *Request, res *Response, next func(e error)) {
-//		handle(req, res)
-//	})
-//}
+func (this *App) Use(handle HandleFn) {
+	this.UsePath("", handle)
+}
 
-//func (this *App) Post(path string, handle func(req Request, res Response)) {
-//	this.Method("POST", path, handle)
-//}
-//func (this *App) Delete(path string, handle func(req Request, res Response)) {
-//	this.Method("DELETE", path, handle)
-//}
-//func (this *App) Put(path string, handle func(req Request, res Response)) {
-//	this.Method("PUT", path, handle)
-//}
-//func (this *App) Patch(path string, handle func(req Request, res Response)) {
-//	this.Method("PATCH", path, handle)
-//}
-//func (this *App) Method(method string, path string, handle func(req Request, res Response)) {
-//}
+func (this *App) UsePath(path string, handle HandleFn) {
+	if len(path) > 0 && !strings.HasPrefix(path, "^") {
+		path = "^" + path
+	}
+	this.RouteNext("", path, handle)
+}
 
-//func (this *App) GetNext(path string, handle func(req Request, res Response, next func(e error))) {
-//	this.MethodNext("GET", path, handle)
-//}
-//func (this *App) PostNext(path string, handle func(req Request, res Response, next func(e error))) {
-//	this.MethodNext("POST", path, handle)
-//}
-//func (this *App) DeleteNext(path string, handle func(req Request, res Response, next func(e error))) {
-//	this.MethodNext("DELETE", path, handle)
-//}
-//func (this *App) PutNext(path string, handle func(req Request, res Response, next func(e error))) {
-//	this.MethodNext("PUT", path, handle)
-//}
-//func (this *App) PatchNext(path string, handle func(req Request, res Response, next func(e error))) {
-//	this.MethodNext("PATCH", path, handle)
-//}
-//func (this *App) MethodNext(method string, path string, handle func(req Request, res Response, next func(e error))) {
-//	this.handlers = append(this.handlers, Handler{method: strings.ToUpper(method), path: PathToReg(path), handle: handle})
-//	log.Printf("methodNext handles len:%d\n", len(this.handlers))
-//}
+func (this *App) Get(path string, handle DoneFn) {
+	this.Route("GET", path, handle)
+}
+func (this *App) Post(path string, handle DoneFn) {
+	this.Route("POST", path, handle)
+}
+func (this *App) Delete(path string, handle DoneFn) {
+	this.Route("DELETE", path, handle)
+}
+func (this *App) Put(path string, handle DoneFn) {
+	this.Route("PUT", path, handle)
+}
+func (this *App) Patch(path string, handle DoneFn) {
+	this.Route("PATCH", path, handle)
+}
+func (this *App) Route(method string, path string, handle DoneFn) {
+	this.RouteNext(method, path, func(req *Request, res *Response, next func(e error)) {
+		handle(req, res)
+	})
+}
 
-//func (this *App) Append(base string, mount *Route) {
-//	this.Mount(base, mount)
-//}
+func (this *App) GetNext(path string, handle HandleFn) {
+	this.RouteNext("GET", path, handle)
+}
+func (this *App) PostNext(path string, handle HandleFn) {
+	this.RouteNext("POST", path, handle)
+}
+func (this *App) DeleteNext(path string, handle HandleFn) {
+	this.RouteNext("DELETE", path, handle)
+}
+func (this *App) PutNext(path string, handle HandleFn) {
+	this.RouteNext("PUT", path, handle)
+}
+func (this *App) PatchNext(path string, handle HandleFn) {
+	this.RouteNext("PATCH", path, handle)
+}
+func (this *App) RouteNext(method string, path string, handle HandleFn) {
+	log.Printf("method:%s,path:%s\n", method, path)
+	this.Handlers = append(this.Handlers, &Handler{Method: strings.ToUpper(method), PathReg: PathToReg(path), Handle: handle})
+}
