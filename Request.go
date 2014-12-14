@@ -64,6 +64,7 @@ func (this *Request) parseMultipartFile(fileHeaders []*multipart.FileHeader) []*
 		if nil != e {
 			panic(e.Error())
 		}
+		formFile.File = file
 		defer file.Close()
 		path := this.genRandomFile(path.Ext(item.Filename))
 		of, e := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
@@ -137,7 +138,6 @@ func (this *Request) GetCookie(name string) *http.Cookie {
 
 }
 
-//headers
 func (this *Request) Cookie(name string) string {
 	cookie, e := this.Req.Cookie(name)
 	if nil != e {
