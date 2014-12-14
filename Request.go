@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 	"math/rand"
 	"mime/multipart"
@@ -36,7 +38,9 @@ func (this *Request) Init() {
 	this.Host = this.Req.Host
 	this.Queries = utils.ParseQueryString(this.Req.URL.RawQuery)
 	if strings.Contains(this.ContentType(), "application/x-www-form-urlencoded") {
-		this.Fields = utils.ParseQueryString(this.Req.PostForm.Encode())
+		body := &bytes.Buffer{}
+		io.Copy(body, this.Req.Body)
+		this.Fields = utils.ParseQueryString(body.String())
 	}
 	if strings.Contains(this.ContentType(), "multipart/form-data") {
 		this.parseMultiparts()
@@ -44,6 +48,7 @@ func (this *Request) Init() {
 }
 
 func (this *Request) parseMultiparts() {
+	this.Req.ParseMultipartForm(1024 * 1024 * 8)
 	this.Fields = this.Req.MultipartForm.Value
 	this.Files = make(map[string][]*FormFile)
 	for k, v := range this.Req.MultipartForm.File {
@@ -78,6 +83,7 @@ func (this *Request) parseMultipartFile(fileHeaders []*multipart.FileHeader) []*
 }
 
 func (this *Request) genRandomFile(suffix string) string {
+	fmt.Println("gen random file", suffix)
 	rint := rand.New(rand.NewSource(time.Now().UnixNano())).Int63()
 	name := strconv.FormatInt(rint, 16)
 	if dir, ok := this.App.Env[UPLOAD_DIR]; ok {
@@ -85,10 +91,10 @@ func (this *Request) genRandomFile(suffix string) string {
 			if fileInfo, e := os.Stat(dir); nil != e || !fileInfo.IsDir() {
 				os.MkdirAll(dir, 0755)
 			}
-			return path.Join(dir, name+"."+suffix)
+			return path.Join(dir, name+suffix)
 		}
 	}
-	return path.Join(os.TempDir(), name+"."+suffix)
+	return path.Join(os.TempDir(), name+suffix)
 
 }
 

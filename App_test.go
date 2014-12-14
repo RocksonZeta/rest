@@ -23,15 +23,5 @@ func (this MyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestListen(t *testing.T) {
-	//app := new(GoApp)
-	//app.Listen(9090)
 	log.Println("hello")
 }
-
-//func main() {
-//	app := new(App)
-//	app.Listen(9090)
-//	//a := []int{10, 20}
-//	//a = append(a, 10)
-//	//Println(a)
-//}
