@@ -24,33 +24,43 @@ type UserRouter struct {
 
 func (this *UserRouter) Router() *rest.App {
 	app := &rest.App{}
-	app.Get("/", this.info)
-	app.Get("/info", this.info)
-	app.Post("/", this.post)
+	app.Get("/", this.Info)
+	app.Get("/info", this.Info)
+	app.Post("/", this.Post)
 	return app
 }
 
-func (this *UserRouter) info(req *rest.Request, res *rest.Response) {
+func (this *UserRouter) Info(req *rest.Request, res *rest.Response) {
 
 	res.Json(&User{"jim"})
 }
 
-func (this *UserRouter) post(req *rest.Request, res *rest.Response) {
+func (this *UserRouter) Post(req *rest.Request, res *rest.Response) {
 	res.Json(req.Fields)
 }
 
 func main() {
 	app := &rest.App{}
-	user := UserRouter{}
-	app.Mount("/", user.Router())
-	app.UsePath("/", middleware.Static("./public"))
+	app.Use(func(req rest.Request, res rest.Response, next func()) {
+		defer func() {
+			e := recover()
+			if nil != e {
+				log.Println(e)
+				res.Json(e)
+			}
+		}()
+		next()
+	})
 	app.Use(func(req *rest.Request, res *rest.Response, next func(e error)) {
 		begin := time.Now()
 		next(nil)
 		cost := (time.Now().UnixNano() - begin.UnixNano()) / 1000000
 		log.Printf("%s %s %dms\n", req.Method, req.Path, cost)
 	})
-	app.Get("/hello", func(req *rest.Request, res *rest.Response) {
+	user := UserRouter{}
+	app.Mount("/", user.Router())
+	app.UsePath("/", middleware.Static("./public"))
+	app.Get("/setcookie", func(req *rest.Request, res *rest.Response) {
 		res.Cookie("name", "jim")
 		res.Cookie("name1", "jim1")
 		res.CookieMaxAge("name1", "jim1", 30)

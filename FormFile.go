@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bufio"
-	"bytes"
 	"io"
 	"mime/multipart"
 	"os"
@@ -27,7 +26,6 @@ func (this *FormFile) Save(path string, limit int) int64 {
 		panic(e.Error())
 	}
 	defer of.Close()
-	buffer := bytes.n
 	bof := bufio.NewWriterSize(of, 8*1024)
 	writeLen, e := io.Copy(bof, this.File)
 	if nil != e {
