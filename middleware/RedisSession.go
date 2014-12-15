@@ -7,6 +7,6 @@ type RedisSessionConf struct {
 	Sid    string
 }
 
-func RedisSession(dir string, conf ...RedisSessionConf) func(request *rest.Request, response *rest.Response, next func(e error)) {
+func RedisSession(dir string, conf ...RedisSessionConf) func(request rest.Request, response rest.Response, next func()) {
 	return nil
 }

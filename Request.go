@@ -65,19 +65,17 @@ func (this *Request) parseMultipartFile(fileHeaders []*multipart.FileHeader) []*
 			panic(e.Error())
 		}
 		formFile.File = file
-		defer file.Close()
-		path := this.genRandomFile(path.Ext(item.Filename))
-		of, e := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
-		if nil != e {
-			panic(e.Error())
-		}
-		defer of.Close()
-		writeLen, e := io.Copy(of, file)
-		if nil != e {
-			panic(e.Error())
-		}
-		formFile.Path = path
-		formFile.Size = int(writeLen)
+		//defer file.Close()
+		//path := this.genRandomFile(path.Ext(item.Filename))
+		//of, e := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
+		//if nil != e {
+		//	panic(e.Error())
+		//}
+		//defer of.Close()
+		//writeLen, e := io.Copy(of, file)
+		//if nil != e {
+		//	panic(e.Error())
+		//}
 		result[i] = formFile
 	}
 	return result

@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-type HandleFn func(req *Request, res *Response, next func())
-type DoneFn func(req *Request, res *Response)
+type HandleFn func(req Request, res Response, next func())
+type DoneFn func(req Request, res Response)
 
 type Handler struct {
 	PathReg *regexp.Regexp

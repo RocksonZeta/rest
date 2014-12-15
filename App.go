@@ -14,7 +14,7 @@ type App struct {
 }
 
 func (this *App) Mount(base string, app *App) {
-	this.UsePath(base, func(req *Request, res *Response, next func()) {
+	this.UsePath(base, func(req Request, res Response, next func()) {
 		if !app.Exec(req, res, 0) {
 			next()
 		}
@@ -22,13 +22,13 @@ func (this *App) Mount(base string, app *App) {
 }
 
 func (this *App) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	request := &Request{Req: req, App: this}
+	request := Request{Req: req, App: this}
 	request.Init()
-	response := &Response{Resp: res, App: this}
+	response := Response{Resp: res, App: this}
 	this.Exec(request, response, 0)
 }
 
-func (this *App) Exec(request *Request, response *Response, i int) bool {
+func (this *App) Exec(request Request, response Response, i int) bool {
 	log.Printf("Exec method:%s,path:%s,OriginPath:%s", request.Method, request.Path, request.OriginUrl())
 	if len(this.Handlers) <= i {
 		return false //no completed
@@ -47,7 +47,7 @@ func (this *App) Exec(request *Request, response *Response, i int) bool {
 		}
 		log.Printf("matched ok ,base:%s,path:%s\n", request.Base, request.Path)
 		handler.Handle(request, response, func() {
-			if 1 < len(base) {
+			if 1 < len(request.Base) {
 				request.Path = path.Join(request.Base, request.Path)
 				request.Base = "/"
 			}
@@ -121,7 +121,7 @@ func (this *App) Patch(path string, handle DoneFn) {
 	this.Route("PATCH", path, handle)
 }
 func (this *App) Route(method string, path string, handle DoneFn) {
-	this.RouteNext(method, path, func(req *Request, res *Response, next func()) {
+	this.RouteNext(method, path, func(req Request, res Response, next func()) {
 		handle(req, res)
 	})
 }

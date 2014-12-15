@@ -13,14 +13,15 @@ type FormFile struct {
 	File        multipart.File
 }
 
-func (this *FormFile) save(file string, limit string) int64 {
+func (this *FormFile) save(path string, limit string) int64 {
 	defer this.File.Close()
-	of, e := bufio.NewWriterSize(os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644), 8*1024)
+	of, e := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
 	if nil != e {
 		panic(e.Error())
 	}
 	defer of.Close()
-	writeLen, e := io.Copy(of, file)
+	bof := bufio.NewWriterSize(of, 8*1024)
+	writeLen, e := io.Copy(bof, this.File)
 	if nil != e {
 		panic(e.Error())
 	}
