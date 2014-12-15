@@ -14,7 +14,7 @@ type StaticConf struct {
 	cacheControl string
 }
 
-func Static(dir string, conf ...StaticConf) func(request *rest.Request, response *rest.Response, next func(e error)) {
+func Static(dir string, conf ...StaticConf) func(request *rest.Request, response *rest.Response, next func()) {
 	stat, e := os.Stat(dir)
 	if nil != e {
 		panic(e)
@@ -22,11 +22,11 @@ func Static(dir string, conf ...StaticConf) func(request *rest.Request, response
 	if !stat.IsDir() {
 		panic(&rest.RestError{Reason: dir + " directory not exists!"})
 	}
-	return func(request *rest.Request, response *rest.Response, next func(e error)) {
+	return func(request *rest.Request, response *rest.Response, next func()) {
 		file := path.Join(dir, request.Path)
 		fileInfo, e := os.Stat(file)
 		if nil != e || fileInfo.IsDir() {
-			next(nil)
+			next()
 			return
 		}
 		since := request.Get("If-Modified-Since")

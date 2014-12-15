@@ -14,9 +14,9 @@ type App struct {
 }
 
 func (this *App) Mount(base string, app *App) {
-	this.UsePath(base, func(req *Request, res *Response, next func(e error)) {
+	this.UsePath(base, func(req *Request, res *Response, next func()) {
 		if !app.Exec(req, res, 0) {
-			next(nil)
+			next()
 		}
 	})
 }
@@ -40,16 +40,22 @@ func (this *App) Exec(request *Request, response *Response, i int) bool {
 		request.Params = params
 		if 1 < len(base) {
 			request.Base = base
-			request.Path = path.Clean(strings.TrimPrefix(request.Path, path.Clean(base)))
+			request.Path = strings.TrimPrefix(path.Clean(request.Path), path.Clean(base))
+			if 0 == len(request.Path) {
+				request.Path = "/"
+			}
 		}
 		log.Printf("matched ok ,base:%s,path:%s\n", request.Base, request.Path)
-		handler.Handle(request, response, func(e error) {
-			if nil != e {
-				panic(e)
+		handler.Handle(request, response, func() {
+			if 1 < len(base) {
+				request.Path = path.Join(request.Base, request.Path)
+				request.Base = "/"
 			}
+			//to do
 			this.Exec(request, response, i+1)
 
 		})
+
 		return true
 	} else {
 		return this.Exec(request, response, i+1)
@@ -115,7 +121,7 @@ func (this *App) Patch(path string, handle DoneFn) {
 	this.Route("PATCH", path, handle)
 }
 func (this *App) Route(method string, path string, handle DoneFn) {
-	this.RouteNext(method, path, func(req *Request, res *Response, next func(e error)) {
+	this.RouteNext(method, path, func(req *Request, res *Response, next func()) {
 		handle(req, res)
 	})
 }

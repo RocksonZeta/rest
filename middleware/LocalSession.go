@@ -29,7 +29,7 @@ func generateSessionId(length int) string {
 	return string(cs[:])
 }
 
-func LocalSession(confs ...LocalSessionConf) func(request *rest.Request, response *rest.Response, next func(e error)) {
+func LocalSession(confs ...LocalSessionConf) func(request *rest.Request, response *rest.Response, next func()) {
 	var conf LocalSessionConf
 	if 0 < len(confs) {
 		conf = confs[0]
@@ -37,7 +37,7 @@ func LocalSession(confs ...LocalSessionConf) func(request *rest.Request, respons
 	initConf(&conf)
 	sessions := map[string]*LocalSessionStore{}
 
-	return func(request *rest.Request, response *rest.Response, next func(e error)) {
+	return func(request *rest.Request, response *rest.Response, next func()) {
 		key := request.Cookie(conf.SessionKey)
 		session := sessions[key]
 		if nil != session {
@@ -50,7 +50,7 @@ func LocalSession(confs ...LocalSessionConf) func(request *rest.Request, respons
 			sessions[newKey] = session
 			response.SetCookie(&http.Cookie{Name: conf.SessionKey, Value: newKey, MaxAge: conf.MaxAge, HttpOnly: true})
 		}
-		next(nil)
+		next()
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type HandleFn func(req *Request, res *Response, next func(e error))
+type HandleFn func(req *Request, res *Response, next func())
 type DoneFn func(req *Request, res *Response)
 
 type Handler struct {
