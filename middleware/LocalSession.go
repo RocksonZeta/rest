@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"math/rand"
 	"net/http"
 	"rest"
@@ -39,17 +40,17 @@ func LocalSession(confs ...LocalSessionConf) func(request rest.Request, response
 
 	return func(request rest.Request, response rest.Response, next func()) {
 		key := request.Cookie(conf.SessionKey)
-		session := sessions[key]
+		var session rest.ISession = sessions[key]
 		if nil != session {
-			request.Session = session
 			response.SetCookie(&http.Cookie{Name: conf.SessionKey, Value: key, MaxAge: conf.MaxAge, HttpOnly: true})
 		} else {
 			newKey := generateSessionId(32)
 			session := &LocalSessionStore{SessionId: newKey, Store: map[string]interface{}{}}
-			request.Session = session
 			sessions[newKey] = session
 			response.SetCookie(&http.Cookie{Name: conf.SessionKey, Value: newKey, MaxAge: conf.MaxAge, HttpOnly: true})
 		}
+		log.Println("set session")
+		*request.Session = session
 		next()
 	}
 }

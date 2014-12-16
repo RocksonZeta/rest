@@ -8,12 +8,17 @@ import (
 	"strings"
 )
 
+type Mountable interface {
+	//return if the app completed the request,true completed,false uncompleted
+	Exec(req Request, res Response, i int) bool
+}
+
 type App struct {
 	Env      map[string]interface{}
 	Handlers []*Handler
 }
 
-func (this *App) Mount(base string, app *App) {
+func (this *App) Mount(base string, app Mountable) {
 	this.UsePath(base, func(req Request, res Response, next func()) {
 		if !app.Exec(req, res, 0) {
 			next()
