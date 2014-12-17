@@ -17,6 +17,10 @@ import (
 	"rest/utils"
 )
 
+type RequestContext struct {
+	Session ISession
+}
+
 type Request struct {
 	Req     *http.Request
 	App     *App
@@ -28,7 +32,7 @@ type Request struct {
 	Queries map[string][]string    //the query params
 	Fields  map[string][]string    //form field or upload fields
 	Files   map[string][]*FormFile //upload files
-	Session *ISession
+	Context *RequestContext
 }
 
 func (this *Request) Init() {
@@ -37,6 +41,7 @@ func (this *Request) Init() {
 	this.Method = this.Req.Method
 	this.Host = this.Req.Host
 	this.Queries = utils.ParseQueryString(this.Req.URL.RawQuery)
+	this.Context = &RequestContext{}
 	if strings.Contains(this.ContentType(), "application/x-www-form-urlencoded") {
 		body := &bytes.Buffer{}
 		io.Copy(body, this.Req.Body)
@@ -123,6 +128,10 @@ func (this *Request) GetParam(name string) string {
 }
 func (this *Request) GetParams(name string) string {
 	return ""
+}
+
+func (this *Request) Session() ISession {
+	return this.Context.Session
 }
 
 func (this *Request) GetCookie(name string) *http.Cookie {

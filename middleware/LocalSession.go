@@ -40,17 +40,17 @@ func LocalSession(confs ...LocalSessionConf) func(request rest.Request, response
 
 	return func(request rest.Request, response rest.Response, next func()) {
 		key := request.Cookie(conf.SessionKey)
-		var session rest.ISession = sessions[key]
+		session := sessions[key]
 		if nil != session {
 			response.SetCookie(&http.Cookie{Name: conf.SessionKey, Value: key, MaxAge: conf.MaxAge, HttpOnly: true})
 		} else {
 			newKey := generateSessionId(32)
-			session := &LocalSessionStore{SessionId: newKey, Store: map[string]interface{}{}}
+			session = &LocalSessionStore{SessionId: newKey, Store: map[string]interface{}{}}
 			sessions[newKey] = session
 			response.SetCookie(&http.Cookie{Name: conf.SessionKey, Value: newKey, MaxAge: conf.MaxAge, HttpOnly: true})
 		}
-		log.Println("set session")
-		*request.Session = session
+		log.Println("set session", session)
+		request.Context.Session = session
 		next()
 	}
 }
