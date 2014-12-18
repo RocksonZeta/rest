@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -36,9 +37,15 @@ func (this *Response) Json(obj interface{}) {
 		}
 	}
 }
-func (this *Response) Jsonp(obj interface{})                          {}
-func (this *Response) Render(tpl string, data map[string]interface{}) {}
-func (this *Response) Redirect(url string)                            {}
+func (this *Response) Jsonp(obj interface{}) {}
+func (this *Response) Render(tpl string, data map[string]interface{}) {
+	temp, e := template.ParseFiles(tpl)
+	if nil != e {
+		panic(e)
+	}
+	temp.Execute(this, data)
+}
+func (this *Response) Redirect(url string) {}
 func (this *Response) Status(status int) {
 	this.Resp.WriteHeader(status)
 }

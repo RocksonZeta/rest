@@ -10,8 +10,7 @@ import (
 )
 
 type StaticConf struct {
-	autoIndex    bool
-	cacheControl string
+	CacheControl string
 }
 
 func Static(dir string, conf ...StaticConf) func(request rest.Request, response rest.Response, next func()) {
