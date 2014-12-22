@@ -33,6 +33,7 @@ func (this *Router) Exec(request Request, response Response, i int) bool {
 	if 0 < len(base) {
 		log.Printf("match ok ,base:%s,path:%s\n", request.Base, request.Path)
 		request.Params = params
+		var oldPath = request.Path
 		if 1 < len(base) {
 			request.Base = base
 			request.Path = strings.TrimPrefix(path.Clean(request.Path), path.Clean(base))
@@ -40,10 +41,14 @@ func (this *Router) Exec(request Request, response Response, i int) bool {
 				request.Path = "/"
 			}
 		}
-		log.Printf("matched ok ,base:%s,path:%s\n", request.Base, request.Path)
+		//var hp string
+		//if nil != handler.PathReg {
+		//	hp = handler.PathReg.String()
+		//}
+		log.Printf("matched ok ,base:%s,path:%s,handler path:%s\n", request.Base, request.Path, handler.PathReg)
 		handler.Handle(request, response, func() {
 			if 1 < len(request.Base) {
-				request.Path = path.Join(request.Base, request.Path)
+				request.Path = oldPath
 				request.Base = "/"
 			}
 			this.Exec(request, response, i+1)
