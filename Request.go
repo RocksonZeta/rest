@@ -2,37 +2,33 @@ package rest
 
 import (
 	"bytes"
-	"fmt"
 	"io"
-	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"os"
-	"path"
-	"strconv"
 	"strings"
-	"time"
 
 	"rest/utils"
 )
 
 type RequestContext struct {
 	Session ISession
+	Body    *bytes.Buffer
 }
 
 type Request struct {
-	Req     *http.Request
-	App     *App
-	Host    string
-	Method  string
-	Path    string
-	Base    string
-	Params  map[string]string      //params in url path
-	Queries map[string][]string    //the query params
-	Fields  map[string][]string    //form field or upload fields
-	Files   map[string][]*FormFile //upload files
-	Context *RequestContext
+	Req         *http.Request
+	App         *App
+	Host        string
+	Method      string
+	Path        string
+	Base        string
+	Params      map[string]string      //params in url path
+	Queries     map[string][]string    //the query params
+	Fields      map[string][]string    //form field or upload fields
+	Files       map[string][]*FormFile //upload files
+	Context     *RequestContext
+	ParamErrors []string
 }
 
 func (this *Request) Init() {
@@ -44,6 +40,7 @@ func (this *Request) Init() {
 	this.Context = &RequestContext{}
 	if strings.Contains(this.ContentType(), "application/x-www-form-urlencoded") {
 		body := &bytes.Buffer{}
+		this.Context.Body = body
 		io.Copy(body, this.Req.Body)
 		this.Fields = utils.ParseQueryString(body.String())
 	}
@@ -70,36 +67,10 @@ func (this *Request) parseMultipartFile(fileHeaders []*multipart.FileHeader) []*
 			panic(e.Error())
 		}
 		formFile.File = file
-		//defer file.Close()
-		//path := this.genRandomFile(path.Ext(item.Filename))
-		//of, e := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
-		//if nil != e {
-		//	panic(e.Error())
-		//}
-		//defer of.Close()
-		//writeLen, e := io.Copy(of, file)
-		//if nil != e {
-		//	panic(e.Error())
-		//}
+
 		result[i] = formFile
 	}
 	return result
-}
-
-func (this *Request) genRandomFile(suffix string) string {
-	fmt.Println("gen random file", suffix)
-	rint := rand.New(rand.NewSource(time.Now().UnixNano())).Int63()
-	name := strconv.FormatInt(rint, 16)
-	if dir, ok := this.App.Env[UPLOAD_DIR]; ok {
-		if dir, ok := dir.(string); ok {
-			if fileInfo, e := os.Stat(dir); nil != e || !fileInfo.IsDir() {
-				os.MkdirAll(dir, 0755)
-			}
-			return path.Join(dir, name+suffix)
-		}
-	}
-	return path.Join(os.TempDir(), name+suffix)
-
 }
 
 func (this *Request) Query(name string) string {
@@ -136,13 +107,11 @@ func (this *Request) Session() ISession {
 
 func (this *Request) GetCookie(name string) *http.Cookie {
 	cookie, e := this.Req.Cookie(name)
-
 	if nil != e {
 		return nil
 	} else {
 		return cookie
 	}
-
 }
 
 func (this *Request) Cookie(name string) string {

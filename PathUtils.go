@@ -17,9 +17,9 @@ func PathToRegString(path string) string {
 		return path
 	}
 	if strings.HasPrefix(path, "^") {
-		return NamedPath(path)
+		return "(?i)" + NamedPath(path)
 	}
-	return "^" + NamedPath(path) + "$"
+	return "(?i)^" + NamedPath(path) + "$"
 }
 func PathToReg(path string) *regexp.Regexp {
 	if 0 == len(path) {
