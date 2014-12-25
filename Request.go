@@ -2,6 +2,7 @@ package rest
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -12,23 +13,32 @@ import (
 )
 
 type RequestContext struct {
-	Session     ISession
-	Body        *bytes.Buffer
-	ParamErrors []string
+	Session ISession
+	Body    *bytes.Buffer
+}
+
+type ParamError struct {
+	Errors []string
+}
+
+func (this *ParamError) Error() string {
+	r, _ := json.Marshal(this.Errors)
+	return string(r)
 }
 
 type Request struct {
-	Req     *http.Request
-	App     *App
-	Host    string
-	Method  string
-	Path    string
-	Base    string
-	Params  map[string]string      //params in url path
-	Queries map[string][]string    //the query params
-	Fields  map[string][]string    //form field or upload fields
-	Files   map[string][]*FormFile //upload files
-	Context *RequestContext
+	Req         *http.Request
+	App         *App
+	Host        string
+	Method      string
+	Path        string
+	Base        string
+	Params      map[string]string      //params in url path
+	Queries     map[string][]string    //the query params
+	Fields      map[string][]string    //form field or upload fields
+	Files       map[string][]*FormFile //upload files
+	Context     *RequestContext
+	ParamErrors []string
 }
 
 func (this *Request) Init() {
@@ -163,4 +173,10 @@ func (this *Request) ContentType() string {
 }
 func (this *Request) Get(head string) string {
 	return this.Req.Header.Get(head)
+}
+
+func (this *Request) PanicParamErrors() {
+	if 0 < len(this.ParamErrors) {
+		panic(&ParamError{this.ParamErrors})
+	}
 }

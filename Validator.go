@@ -59,7 +59,7 @@ func (this *Validator) FireError(defaultTip string, tip []string, args ...interf
 			Error = fmt.Sprintf(tip[0], args...)
 		}
 	}
-	this.Req.Context.ParamErrors = append(this.Req.Context.ParamErrors, Error)
+	this.Req.ParamErrors = append(this.Req.ParamErrors, Error)
 }
 
 func (this *Validator) Optional() *Validator {
@@ -113,7 +113,7 @@ func (this *FieldValidator) IsFloat(tip ...string) *FieldValidator {
 func (this *FieldValidator) Len(min, max int, tip ...string) *FieldValidator {
 	var l = len(this.Value)
 	if this.GoOn && (l < min || l > max) {
-		this.FireError(this.Key+" should between %d and %d.", tip, min, max)
+		this.FireError(this.Key+"'length should between %d and %d.", tip, min, max)
 	}
 	return this
 }
