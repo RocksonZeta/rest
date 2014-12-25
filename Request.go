@@ -12,23 +12,23 @@ import (
 )
 
 type RequestContext struct {
-	Session ISession
-	Body    *bytes.Buffer
+	Session     ISession
+	Body        *bytes.Buffer
+	ParamErrors []string
 }
 
 type Request struct {
-	Req         *http.Request
-	App         *App
-	Host        string
-	Method      string
-	Path        string
-	Base        string
-	Params      map[string]string      //params in url path
-	Queries     map[string][]string    //the query params
-	Fields      map[string][]string    //form field or upload fields
-	Files       map[string][]*FormFile //upload files
-	Context     *RequestContext
-	ParamErrors []string
+	Req     *http.Request
+	App     *App
+	Host    string
+	Method  string
+	Path    string
+	Base    string
+	Params  map[string]string      //params in url path
+	Queries map[string][]string    //the query params
+	Fields  map[string][]string    //form field or upload fields
+	Files   map[string][]*FormFile //upload files
+	Context *RequestContext
 }
 
 func (this *Request) Init() {
@@ -73,19 +73,26 @@ func (this *Request) parseMultipartFile(fileHeaders []*multipart.FileHeader) []*
 	return result
 }
 
-func (this *Request) Query(name string) string {
-	if 0 >= len(this.Queries) {
-		return ""
-	} else {
-		return this.Queries[name][0]
-	}
+func (this *Request) Param(name string) *FieldValidator {
+	value, exists := this.Params[name]
+	return &FieldValidator{Validator: Validator{Key: name, Exists: exists, GoOn: true, Req: this}, Value: value}
+
 }
-func (this *Request) Field(name string) string {
-	if 0 >= len(this.Fields) {
-		return ""
-	} else {
-		return this.Fields[name][0]
+
+func (this *Request) Query(name string) *FieldValidator {
+	var value string
+	exists := false
+	if nil != this.Queries {
+		values, ex := this.Queries[name]
+		if 0 < len(values) {
+			value = values[0]
+		}
+		exists = ex
 	}
+	return &FieldValidator{Validator: Validator{Key: name, Exists: exists, GoOn: true, Req: this}, Value: value}
+}
+func (this *Request) Field(name string) *FieldValidator {
+	return nil
 }
 func (this *Request) File(name string) *FormFile {
 	if 0 >= len(this.Files) {
