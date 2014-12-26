@@ -29,3 +29,16 @@ func ParseQueryString(queryString string) map[string][]string {
 	}
 	return result
 }
+
+func Shift(arr *[]string) string {
+	if 0 == len(*arr) {
+		return ""
+	}
+	r := (*arr)[0]
+	*arr = (*arr)[1:]
+	return r
+}
+
+func IsUrl(url string) {
+
+}

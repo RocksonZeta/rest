@@ -102,7 +102,16 @@ func (this *Request) Query(name string) *FieldValidator {
 	return &FieldValidator{Validator: Validator{Key: name, Exists: exists, GoOn: true, Req: this}, Value: value}
 }
 func (this *Request) Field(name string) *FieldValidator {
-	return nil
+	var value string
+	exists := false
+	if nil != this.Fields {
+		values, ex := this.Fields[name]
+		if 0 < len(values) {
+			value = values[0]
+		}
+		exists = ex
+	}
+	return &FieldValidator{Validator: Validator{Key: name, Exists: exists, GoOn: true, Req: this}, Value: value}
 }
 func (this *Request) File(name string) *FormFile {
 	if 0 >= len(this.Files) {
