@@ -1,8 +1,8 @@
 rest
 ====
 
-go rest!
-To Build Restful applcation like expressjs.
+go rest!<br/>
+To Build Restful application like expressjs.
 
 ## Installation
 ```
