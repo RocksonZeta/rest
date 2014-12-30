@@ -5,7 +5,6 @@ go rest!
 To Build Restful applcation like expressjs.
 
 ## Installation
-====
 ```
 $ go get github.com/RocksonZeta/rest
 ```
@@ -16,7 +15,6 @@ $ go get github.com/RocksonZeta/rest
 - Parameter validator with its own.
 
 ## Example
-====
 ```go
 package main
 
@@ -152,5 +150,4 @@ func main() {
 ```
 
 ## License
-====
 [MIT License](https://github.com/RocksonZeta/rest/blob/master/LICENSE)
