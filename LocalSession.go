@@ -1,9 +1,8 @@
-package middleware
+package rest
 
 import (
 	"math/rand"
 	"net/http"
-	"rest"
 )
 
 type LocalSessionConf struct {
@@ -29,7 +28,7 @@ func generateSessionId(length int) string {
 	return string(cs[:])
 }
 
-func LocalSession(confs ...LocalSessionConf) func(request rest.Request, response rest.Response, next func()) {
+func LocalSession(confs ...LocalSessionConf) func(request Request, response Response, next func()) {
 	var conf LocalSessionConf
 	if 0 < len(confs) {
 		conf = confs[0]
@@ -37,7 +36,7 @@ func LocalSession(confs ...LocalSessionConf) func(request rest.Request, response
 	initConf(&conf)
 	sessions := map[string]*LocalSessionStore{}
 
-	return func(request rest.Request, response rest.Response, next func()) {
+	return func(request Request, response Response, next func()) {
 		key := request.Cookie(conf.SessionKey)
 		session := sessions[key]
 		if nil != session {

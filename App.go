@@ -10,6 +10,12 @@ type App struct {
 	Env map[string]interface{}
 }
 
+func NewApp() *App {
+	app := &App{Env: map[string]interface{}{}}
+	app.Enable(TRUST_PROXY)
+	return app
+}
+
 func (this *App) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	request := Request{Req: req, App: this}
 	request.Init()

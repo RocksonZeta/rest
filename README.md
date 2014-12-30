@@ -14,17 +14,33 @@ $ go get github.com/RocksonZeta/rest
 - Easy to extends.
 - Parameter validator with its own.
 
-## Example
+## Examples
+
+### begin
+```
+package main
+
+import "github.com/RocksonZeta/rest"
+
+func main() {
+	app := rest.NewApp()
+	app.Get("/", func(req rest.Request, res rest.Response) {
+		res.Json(map[string]string{"hello": "world"})
+	})
+	app.Listen(6161)
+}
+``` 
+
+### normal 
 ```go
 package main
 
 import (
 	"log"
-	"rest"
-	"rest/middleware"
 	"runtime"
 	"strconv"
 	"time"
+	"github.com/RocksonZeta/rest"
 )
 
 type User struct {
@@ -53,7 +69,7 @@ func (this *UserRouter) post(req rest.Request, res rest.Response) {
 }
 
 func main() {
-	app := &rest.App{}
+	app := rest.NewApp()
 	app.Use(func(req rest.Request, res rest.Response, next func()) {
 		defer func() {
 			e := recover()
@@ -72,7 +88,15 @@ func main() {
 		cost := (time.Now().UnixNano() - begin.UnixNano()) / 1e6
 		log.Printf("%s %s %dms\n", req.Method, req.Path, cost)
 	})
-	app.Use(middleware.LocalSession())
+	//use app as static file server
+	app.UsePath("/", rest.Static("./public"))
+	//enable app has session ability
+	app.Use(rest.LocalSession())
+
+	user := UserRouter{}
+	//the base path of user router  is /user
+	app.Mount("/user", user.Router())
+
 	app.Get("/", func(req rest.Request, res rest.Response) {
 		if req.Session().Has("count") {
 			req.Session().Set("count", req.Session().GetInt("count")+1)
@@ -103,11 +127,6 @@ func main() {
 		req.Panic() //panic if params have errors
 		res.Json(map[string]interface{}{"name": name, "age": age, "password": password, "addr": addr, "email": email, "homepage": homepage})
 	})
-
-	user := UserRouter{}
-	//the base path of user router  is /user
-	app.Mount("/user", user.Router())
-	app.UsePath("/", middleware.Static("./public"))
 
 	app.Get("/api/user/:id", func(req rest.Request, res rest.Response) {
 		res.Json(req.Params)
@@ -145,8 +164,8 @@ func main() {
 
 	log.Println("server listen at:6161")
 	app.Listen(6161)
-
 }
+
 ```
 
 ## License
