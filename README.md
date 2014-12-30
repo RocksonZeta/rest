@@ -12,7 +12,9 @@ $ go get github.com/RocksonZeta/rest
 
 ## Features
 ====
-- Simple to use.
+- Easy to use.
+- Easy to extends.
+- Parameter validator with its own.
 
 ## Example
 ====
