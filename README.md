@@ -11,7 +11,6 @@ $ go get github.com/RocksonZeta/rest
 ```
 
 ## Features
-====
 - Easy to use.
 - Easy to extends.
 - Parameter validator with its own.
