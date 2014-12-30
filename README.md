@@ -17,7 +17,7 @@ $ go get github.com/RocksonZeta/rest
 ## Examples
 
 ### begin
-```
+```go
 package main
 
 import "github.com/RocksonZeta/rest"
