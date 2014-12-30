@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,8 +12,9 @@ import (
 )
 
 type RequestContext struct {
-	Session ISession
-	Body    *bytes.Buffer
+	Session     ISession
+	Body        *bytes.Buffer
+	ParamErrors []string
 }
 
 type ParamError struct {
@@ -27,18 +27,17 @@ func (this *ParamError) Error() string {
 }
 
 type Request struct {
-	Req         *http.Request
-	App         *App
-	Host        string
-	Method      string
-	Path        string
-	Base        string
-	Params      map[string]string      //params in url path
-	Queries     map[string][]string    //the query params
-	Fields      map[string][]string    //form field or upload fields
-	Files       map[string][]*FormFile //upload files
-	Context     *RequestContext
-	ParamErrors []string
+	Req     *http.Request
+	App     *App
+	Host    string
+	Method  string
+	Path    string
+	Base    string
+	Params  map[string]string           //params in url path
+	Queries map[string][]string         //the query params
+	Fields  map[string][]string         //form field or upload fields
+	Files   map[string][]*FileValidator //upload files
+	Context *RequestContext
 }
 
 func (this *Request) Init() {
@@ -60,27 +59,17 @@ func (this *Request) Init() {
 }
 
 func (this *Request) parseMultiparts() {
-	this.Req.ParseMultipartForm(1024 * 1024 * 8)
+	this.Req.ParseMultipartForm(1024 * 1024 * 32)
 	this.Fields = this.Req.MultipartForm.Value
-	this.Files = make(map[string][]*FormFile)
+	this.Files = make(map[string][]*FileValidator)
 	for k, v := range this.Req.MultipartForm.File {
-		this.Files[k] = this.parseMultipartFile(v)
-	}
-}
-
-func (this *Request) parseMultipartFile(fileHeaders []*multipart.FileHeader) []*FormFile {
-	result := make([]*FormFile, len(fileHeaders))
-	for i, item := range fileHeaders {
-		formFile := &FormFile{FileName: item.Filename, ContentType: item.Header.Get("Content-type")}
-		file, e := item.Open()
-		if nil != e {
-			panic(e.Error())
+		fileObjects := make([]*FileValidator, len(v))
+		for i, item := range v {
+			fileValidator := &FileValidator{Validator: Validator{Key: k, Exists: true, GoOn: true, Req: this}, ContentType: item.Header.Get("Content-type"), FileName: item.Filename, FileItem: item, Max: -1}
+			fileObjects[i] = fileValidator
 		}
-		formFile.File = file
-
-		result[i] = formFile
+		this.Files[k] = fileObjects
 	}
-	return result
 }
 
 func (this *Request) Param(name string) *FieldValidator {
@@ -113,18 +102,40 @@ func (this *Request) Field(name string) *FieldValidator {
 	}
 	return &FieldValidator{Validator: Validator{Key: name, Exists: exists, GoOn: true, Req: this}, Value: value}
 }
-func (this *Request) File(name string) *FormFile {
+func (this *Request) File(name string) *FileValidator {
 	if 0 >= len(this.Files) {
-		return nil
+		return &FileValidator{Validator: Validator{Key: name, Exists: true, GoOn: true, Req: this}}
 	} else {
-		return this.Files[name][0]
+		if files, ok := this.Files[name]; ok {
+			if 0 == len(files) {
+				return &FileValidator{Validator: Validator{Key: name, Exists: true, GoOn: true, Req: this}}
+			}
+			return files[0]
+		} else {
+			return &FileValidator{Validator: Validator{Key: name, Exists: true, GoOn: true, Req: this}}
+		}
 	}
 }
 func (this *Request) GetParam(name string) string {
-	return ""
+	ps := this.GetParams(name)
+	if 0 == len(ps) {
+		return ""
+	} else {
+		return ps[0]
+	}
 }
-func (this *Request) GetParams(name string) string {
-	return ""
+func (this *Request) GetParams(name string) []string {
+	param := this.Params[name]
+	if 0 < len(param) {
+		return []string{param}
+	}
+	if ps, ok := this.Queries[name]; ok && 0 > len(ps) {
+		return ps
+	}
+	if ps, ok := this.Fields[name]; ok && 0 > len(ps) {
+		return ps
+	}
+	return []string{}
 }
 
 func (this *Request) Session() ISession {
@@ -149,20 +160,33 @@ func (this *Request) Cookie(name string) string {
 	}
 }
 
-func (this *Request) Ip() string {
-
-	ip := ""
-	if this.App.Enabled(TRUST_PROXY) {
-		return ""
+func (this *Request) Accept(t string) bool {
+	acceptArr := strings.Split(this.Get("Accept"), ",")
+	for _, a := range acceptArr {
+		if a == t || a == t[(strings.LastIndex(a, "/")+1):] {
+			return true
+		}
 	}
-	ip = this.Req.RemoteAddr
-	return ip
+	return false
 }
-func (this *Request) Ips() string {
-	return ""
+
+func (this *Request) Ip() string {
+	return this.Ips()[0]
 }
-func (this *Request) Xhr() string {
-	return ""
+func (this *Request) Ips() []string {
+	if this.App.Enabled(TRUST_PROXY) {
+		forwords := this.Get("X-Forwarded-For")
+		if 0 == len(forwords) {
+			return []string{this.Req.RemoteAddr}
+		} else {
+			return strings.Split(forwords, ",")
+		}
+	} else {
+		return []string{this.Req.RemoteAddr}
+	}
+}
+func (this *Request) Xhr() bool {
+	return "XMLHttpRequest" == this.Get("X-Requested-With")
 }
 
 func (this *Request) OriginUrl() string {
@@ -172,20 +196,29 @@ func (this *Request) Url() *url.URL {
 	return this.Req.URL
 }
 func (this *Request) Protocol() string {
-	return ""
+
+	if this.App.Enabled(TRUST_PROXY) {
+		proto := this.Get("X-Forwarded-Proto")
+		if 0 < len(proto) {
+			return proto
+		}
+	}
+	return this.Req.URL.Scheme
 }
-func (this *Request) IsSecure() string {
-	return ""
+func (this *Request) IsSecure() bool {
+	return "https" == this.Protocol()
 }
 func (this *Request) ContentType() string {
 	return this.Req.Header.Get("Content-type")
 }
+
+//get head from http request
 func (this *Request) Get(head string) string {
 	return this.Req.Header.Get(head)
 }
 
-func (this *Request) PanicParamErrors() {
-	if 0 < len(this.ParamErrors) {
-		panic(&ParamError{this.ParamErrors})
+func (this *Request) Panic() {
+	if 0 < len(this.Context.ParamErrors) {
+		panic(&ParamError{this.Context.ParamErrors})
 	}
 }

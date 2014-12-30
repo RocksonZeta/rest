@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"math/rand"
 	"net/http"
 	"rest"
@@ -49,7 +48,6 @@ func LocalSession(confs ...LocalSessionConf) func(request rest.Request, response
 			sessions[newKey] = session
 			response.SetCookie(&http.Cookie{Name: conf.SessionKey, Value: newKey, MaxAge: conf.MaxAge, HttpOnly: true})
 		}
-		log.Println("set session", session)
 		request.Context.Session = session
 		next()
 	}

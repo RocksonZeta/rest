@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"log"
 	"path"
 	"strings"
 )
@@ -24,14 +23,14 @@ func (this *Router) Mount(base string, app Routable) {
 }
 
 func (this *Router) Exec(request Request, response Response, i int) bool {
-	log.Printf("Exec method:%s,path:%s,OriginPath:%s", request.Method, request.Path, request.OriginUrl())
+	//log.Printf("Exec method:%s,path:%s,OriginPath:%s", request.Method, request.Path, request.OriginUrl())
 	if len(this.Handlers) <= i {
 		return false //no completed
 	}
 	handler := this.Handlers[i]
 	base, params := handler.Matches(request.Method, request.Path)
 	if 0 < len(base) {
-		log.Printf("match ok ,base:%s,path:%s\n", request.Base, request.Path)
+		//log.Printf("match ok ,base:%s,path:%s\n", request.Base, request.Path)
 		request.Params = params
 		var oldPath = request.Path
 		if 1 < len(base) {
@@ -45,7 +44,7 @@ func (this *Router) Exec(request Request, response Response, i int) bool {
 		//if nil != handler.PathReg {
 		//	hp = handler.PathReg.String()
 		//}
-		log.Printf("matched ok ,base:%s,path:%s,handler path:%s\n", request.Base, request.Path, handler.PathReg)
+		//log.Printf("matched ok ,base:%s,path:%s,handler path:%s\n", request.Base, request.Path, handler.PathReg)
 		handler.Handle(request, response, func() {
 			if 1 < len(request.Base) {
 				request.Path = oldPath
@@ -109,6 +108,5 @@ func (this *Router) PatchNext(path string, handle HandleFn) {
 	this.RouteNext("PATCH", path, handle)
 }
 func (this *Router) RouteNext(method string, path string, handle HandleFn) {
-	log.Printf("method:%s,path:%s\n", method, path)
 	this.Handlers = append(this.Handlers, &Handler{Method: strings.ToUpper(method), PathReg: PathToReg(path), Handle: handle})
 }

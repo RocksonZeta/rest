@@ -38,7 +38,3 @@ func Shift(arr *[]string) string {
 	*arr = (*arr)[1:]
 	return r
 }
-
-func IsUrl(url string) {
-
-}

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"io"
-	"log"
 	"os"
 	"path"
 	"rest"
@@ -31,7 +30,6 @@ func Static(dir string, conf ...StaticConf) func(request rest.Request, response 
 		since := request.Get("If-Modified-Since")
 		if 0 != len(since) {
 			sinceTime, e := time.Parse(rest.GMT_FORMAT, since)
-			log.Println(sinceTime.Unix(), fileInfo.ModTime().Unix())
 			if nil == e && (sinceTime.Unix()-fileInfo.ModTime().Unix() >= 0) {
 				response.Status(304)
 				return
