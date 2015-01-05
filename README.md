@@ -4,6 +4,8 @@ rest
 go rest!<br/>
 To build restful application like expressjs.
 
+[![Build Status](https://travis-ci.org/RocksonZeta/rest.svg)](https://travis-ci.org/RocksonZeta/rest)
+
 ## Installation
 ```
 $ go get github.com/RocksonZeta/rest
@@ -21,12 +23,14 @@ $ go get github.com/RocksonZeta/rest
 package main
 
 import "github.com/RocksonZeta/rest"
+import "log"
 
 func main() {
 	app := rest.NewApp()
 	app.Get("/", func(req rest.Request, res rest.Response) {
 		res.Json(map[string]string{"hello": "world"})
 	})
+	log.Println("server start at:6161")
 	app.Listen(6161)
 }
 ``` 
