@@ -11,6 +11,9 @@ To build restful application like expressjs.
 $ go get github.com/RocksonZeta/rest
 ```
 
+## Documentation
+- [API Reference](http://godoc.org/github.com/RocksonZeta/rest)
+
 ## Features
 - Easy to use.
 - Easy to extends.
