@@ -7,10 +7,12 @@ import (
 	"time"
 )
 
+//static middleaware configuration
 type StaticConf struct {
 	CacheControl string
 }
 
+//rest static file server middleware
 func Static(dir string, conf ...StaticConf) func(request Request, response Response, next func()) {
 	stat, e := os.Stat(dir)
 	if nil != e {

@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+//request context,such as request session,request parameter errors
 type RequestContext struct {
 	Session     ISession
 	Body        *bytes.Buffer
@@ -24,6 +25,7 @@ func (this *ParamError) Error() string {
 	return string(r)
 }
 
+//http request object wrapper
 type Request struct {
 	Req     *http.Request
 	App     *App
@@ -95,12 +97,16 @@ func (this *Request) parseMultiparts() {
 	}
 }
 
+//get param from url as a fieldValidator
+//filed value is from url eg. /user/:id
 func (this *Request) Param(name string) *FieldValidator {
 	value, exists := this.Params[name]
 	return &FieldValidator{Validator: Validator{Key: name, Exists: exists, GoOn: true, Req: this}, Value: value}
 
 }
 
+//get param from url's query as a fieldValidator
+//filed value is from url eg. /user?id=xx
 func (this *Request) Query(name string) *FieldValidator {
 	var value string
 	exists := false
@@ -113,6 +119,8 @@ func (this *Request) Query(name string) *FieldValidator {
 	}
 	return &FieldValidator{Validator: Validator{Key: name, Exists: exists, GoOn: true, Req: this}, Value: value}
 }
+
+//get param from request body as a fieldValidator
 func (this *Request) Field(name string) *FieldValidator {
 	var value string
 	exists := false
@@ -125,6 +133,8 @@ func (this *Request) Field(name string) *FieldValidator {
 	}
 	return &FieldValidator{Validator: Validator{Key: name, Exists: exists, GoOn: true, Req: this}, Value: value}
 }
+
+//get fileValidator from multipart/form-data
 func (this *Request) File(name string) *FileValidator {
 	if 0 >= len(this.Files) {
 		return &FileValidator{Validator: Validator{Key: name, Exists: true, GoOn: true, Req: this}}
@@ -139,14 +149,18 @@ func (this *Request) File(name string) *FileValidator {
 		}
 	}
 }
-func (this *Request) GetParam(name string) string {
+
+//get param from requets,it will test url param,query,body
+func (this *Request) GetParam(name string) *FieldValidator {
 	ps := this.GetParams(name)
 	if 0 == len(ps) {
-		return ""
+		return &FieldValidator{Validator: Validator{Key: name, Exists: false, GoOn: true, Req: this}, Value: ""}
 	} else {
-		return ps[0]
+		return &FieldValidator{Validator: Validator{Key: name, Exists: true, GoOn: true, Req: this}, Value: ps[0]}
 	}
 }
+
+//get params from requets,it will test url param,query,body
 func (this *Request) GetParams(name string) []string {
 	param := this.Params[name]
 	if 0 < len(param) {
@@ -161,10 +175,12 @@ func (this *Request) GetParams(name string) []string {
 	return []string{}
 }
 
+//get session object
 func (this *Request) Session() ISession {
 	return this.Context.Session
 }
 
+//get cookie object
 func (this *Request) GetCookie(name string) *http.Cookie {
 	cookie, e := this.Req.Cookie(name)
 	if nil != e {
@@ -174,6 +190,7 @@ func (this *Request) GetCookie(name string) *http.Cookie {
 	}
 }
 
+//get request cookie value
 func (this *Request) Cookie(name string) string {
 	cookie, e := this.Req.Cookie(name)
 	if nil != e {
@@ -183,6 +200,7 @@ func (this *Request) Cookie(name string) string {
 	}
 }
 
+//check request header if it accept the specified type(t)
 func (this *Request) Accept(t string) bool {
 	acceptArr := strings.Split(this.Get("Accept"), ",")
 	for _, a := range acceptArr {
@@ -193,9 +211,12 @@ func (this *Request) Accept(t string) bool {
 	return false
 }
 
+//get remote host ip address
 func (this *Request) Ip() string {
 	return this.Ips()[0]
 }
+
+//get remote host ip addresses , from "X-Forwarded-For" header if TRUST_PROXY enabled
 func (this *Request) Ips() []string {
 	if this.App.Enabled(TRUST_PROXY) {
 		forwords := this.Get("X-Forwarded-For")
@@ -208,16 +229,24 @@ func (this *Request) Ips() []string {
 		return []string{this.Req.RemoteAddr}
 	}
 }
+
+//check the request is a ajax request
+//only check the "X-Requested-With" if equals "XMLHttpRequest"
 func (this *Request) Xhr() bool {
 	return "XMLHttpRequest" == this.Get("X-Requested-With")
 }
 
+//get request origin url
 func (this *Request) OriginUrl() string {
 	return this.Req.URL.String()
 }
+
+//get request origin url object
 func (this *Request) Url() *url.URL {
 	return this.Req.URL
 }
+
+//get request protocol
 func (this *Request) Protocol() string {
 
 	if this.App.Enabled(TRUST_PROXY) {
@@ -228,6 +257,9 @@ func (this *Request) Protocol() string {
 	}
 	return this.Req.URL.Scheme
 }
+
+//check request if secure .
+//check the request protocol if equals "https"
 func (this *Request) IsSecure() bool {
 	return "https" == this.Protocol()
 }
@@ -235,11 +267,12 @@ func (this *Request) ContentType() string {
 	return this.Req.Header.Get("Content-type")
 }
 
-//get head from http request
+//get header from http request
 func (this *Request) Get(head string) string {
 	return this.Req.Header.Get(head)
 }
 
+//if request param validate has errors , Panic method will throw ParamError
 func (this *Request) Panic() {
 	if 0 < len(this.Context.ParamErrors) {
 		panic(&ParamError{this.Context.ParamErrors})

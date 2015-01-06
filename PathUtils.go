@@ -12,6 +12,7 @@ func NamedPath(path string) string {
 	return PATH_REG.ReplaceAllString(path, "(?P<$1>[^/]+)")
 }
 
+//convert request path to regular string
 func PathToRegString(path string) string {
 	if 0 == len(path) {
 		return path
@@ -21,6 +22,8 @@ func PathToRegString(path string) string {
 	}
 	return "(?i)^" + NamedPath(path) + "$"
 }
+
+//convert path to regular expression
 func PathToReg(path string) *regexp.Regexp {
 	if 0 == len(path) {
 		return nil
@@ -28,6 +31,7 @@ func PathToReg(path string) *regexp.Regexp {
 	return regexp.MustCompile(PathToRegString(path))
 }
 
+//get name group from matched result
 func NamedMatches(reg *regexp.Regexp, path string) (base string, result map[string]string) {
 	values := reg.FindStringSubmatch(path)
 	if 0 == len(values) {

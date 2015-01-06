@@ -25,6 +25,7 @@ var HalfWidthReg = regexp.MustCompile("[\u0020-\u007E\uFF61-\uFF9F\uFFA0-\uFFDC\
 
 var Base64Reg = regexp.MustCompile("^(?:[A-Za-z0-9+\\/]{4})*(?:[A-Za-z0-9+\\/]{2}==|[A-Za-z0-9+\\/]{3}=|[A-Za-z0-9+\\/]{4})$")
 
+//Parameter validator base class
 type Validator struct {
 	Key    string
 	GoOn   bool
@@ -33,10 +34,12 @@ type Validator struct {
 	Req    *Request
 }
 
+//check validate has errors
 func (this *Validator) HasError() bool {
 	return 0 == len(this.Error)
 }
 
+//fire if validator encounter errors
 func (this *Validator) FireError(defaultTip string, tip []string) {
 	this.GoOn = false
 	errorTip := defaultTip

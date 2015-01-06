@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+//local session configuration
 type LocalSessionConf struct {
 	MaxAge     int
 	SessionKey string
@@ -28,6 +29,7 @@ func generateSessionId(length int) string {
 	return string(cs[:])
 }
 
+//local session middleware
 func LocalSession(confs ...LocalSessionConf) func(request Request, response Response, next func()) {
 	var conf LocalSessionConf
 	if 0 < len(confs) {
