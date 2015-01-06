@@ -61,18 +61,11 @@ func (this *UserRouter) Router() *rest.Router {
 	app := &rest.Router{}
 	//the request path should be /user
 	app.Get("/", this.info)
-	//the request path should be /user/info
-	app.Get("/info", this.info)
-	app.Post("/", this.post)
 	return app
 }
 
 func (this *UserRouter) info(req rest.Request, res rest.Response) {
 	res.Json(&User{"jim"})
-}
-
-func (this *UserRouter) post(req rest.Request, res rest.Response) {
-	res.Json(req.Fields)
 }
 
 func main() {
@@ -105,16 +98,7 @@ func main() {
 	app.Mount("/user", user.Router())
 
 	app.Get("/", func(req rest.Request, res rest.Response) {
-		if req.Session().Has("count") {
-			req.Session().Set("count", req.Session().GetInt("count")+1)
-		} else {
-			req.Session().Set("count", 1)
-		}
-		res.Send("session:" + strconv.Itoa(req.Session().GetInt("count")))
-	})
-	app.UsePath("/api", func(req rest.Request, res rest.Response, next func()) {
-		log.Println("we get /api")
-		next()
+		res.Send("hello");
 	})
 
 	app.Post("/upload", func(req rest.Request, res rest.Response) {
@@ -138,35 +122,9 @@ func main() {
 	app.Get("/api/user/:id", func(req rest.Request, res rest.Response) {
 		res.Json(req.Params)
 	})
-	app.Get("/api/user/:name/first", func(req rest.Request, res rest.Response) {
-		res.Json(req.Params)
-	})
-	app.Get("/cookie", func(req rest.Request, res rest.Response) {
-		res.Cookie("name", "jim")
-		res.Cookie("name1", "jim1")
-		res.CookieMaxAge("name1", "jim1", 30)
-		res.Send("world")
-	})
 	app.Get("/tpl", func(req rest.Request, res rest.Response) {
 		data := map[string]interface{}{"name": "jim", "age": 12, "user": User{"tom"}}
 		res.Render("view/hello.tpl", data)
-	})
-	app.Get("/download", func(req rest.Request, res rest.Response) {
-		res.Download("/hello.txt")
-	})
-	app.Get("/Sendfile", func(req rest.Request, res rest.Response) {
-		res.SendFile("public/user.html")
-	})
-	app.Get("/jsonp", func(req rest.Request, res rest.Response) {
-		res.Jsonp(User{"jim"})
-	})
-	app.Get("/redirect", func(req rest.Request, res rest.Response) {
-		log.Println("redirect to ")
-		res.Redirect("http://www.baidu.com")
-	})
-	app.Post("/form", func(req rest.Request, res rest.Response) {
-		log.Println("post form ", req.Fields)
-		res.Json(req.Fields)
 	})
 
 	log.Println("server listen at:6161")
