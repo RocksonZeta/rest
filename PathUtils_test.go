@@ -1,12 +1,11 @@
 package rest
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
 func TestNamedMatches(t *testing.T) {
-
-	base, params := NamedMatches(PathToReg("^/"), "/api/hello")
-	fmt.Println("result", base, params)
+	path := "/user/123"
+	base, params := NamedMatches(PathToReg("/user/:id"), path)
+	if base != path || params["id"] != "123" {
+		t.Errorf("/user/123 not matched to /uesr/:id")
+	}
 }
